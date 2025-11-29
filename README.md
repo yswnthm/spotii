@@ -1,2 +1,2 @@
 # spotii
-a shiny place to get shiny *ahh playlists
+~ shiny *aah place to get shiny *ahh playlists
