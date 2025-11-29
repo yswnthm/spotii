@@ -15,7 +15,7 @@ export default function Home() {
       <div className="fixed inset-0 z-0">
         <Image
           alt="Background image"
-          src="/spotii2.jpg"
+          src="/back2.jpg"
           fill
           priority
           className="object-cover blur-[2px] opacity-70"
