@@ -22,7 +22,7 @@ interface SpotifyPlaylist {
 }
 
 export default function DashboardPage() {
-    const { playlists, getStats } = useRecentPlaylists()
+    const { playlists, getStats, deletePlaylist } = useRecentPlaylists()
     const stats = getStats()
 
     const [spotifyPlaylists, setSpotifyPlaylists] = useState<SpotifyPlaylist[]>([])
@@ -163,6 +163,7 @@ export default function DashboardPage() {
                                     key={playlist.id}
                                     playlist={unifiedPlaylist}
                                     onClick={() => handlePlaylistClick(unifiedPlaylist)}
+                                    onDelete={() => deletePlaylist(playlist.id)}
                                 />
                             )
                         })}

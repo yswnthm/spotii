@@ -21,7 +21,7 @@ interface SpotifyPlaylist {
 }
 
 export default function LibraryPage() {
-    const { playlists: spotiiPlaylists } = useRecentPlaylists()
+    const { playlists: spotiiPlaylists, deletePlaylist } = useRecentPlaylists()
     const [spotifyPlaylists, setSpotifyPlaylists] = useState<SpotifyPlaylist[]>([])
     const [isLoadingSpotify, setIsLoadingSpotify] = useState(true)
     const [spotifyError, setSpotifyError] = useState<string | null>(null)
@@ -150,13 +150,17 @@ export default function LibraryPage() {
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white">Spotii Playlists ({unifiedSpotiiPlaylists.length})</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                            {unifiedSpotiiPlaylists.map((playlist) => (
-                                <PlaylistCard
-                                    key={playlist.id}
-                                    playlist={playlist}
-                                    onClick={() => handlePlaylistClick(playlist)}
-                                />
-                            ))}
+                            {unifiedSpotiiPlaylists.map((playlist) => {
+                                const originalId = playlist.id.replace('spotii-', '')
+                                return (
+                                    <PlaylistCard
+                                        key={playlist.id}
+                                        playlist={playlist}
+                                        onClick={() => handlePlaylistClick(playlist)}
+                                        onDelete={() => deletePlaylist(originalId)}
+                                    />
+                                )
+                            })}
                         </div>
                     </div>
 
@@ -214,14 +218,19 @@ export default function LibraryPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {allPlaylists.map((playlist) => (
-                        <PlaylistCard
-                            key={playlist.id}
-                            playlist={playlist}
-                            showSourceTag
-                            onClick={() => handlePlaylistClick(playlist)}
-                        />
-                    ))}
+                    {allPlaylists.map((playlist) => {
+                        const isSpotii = playlist.source === 'spotii'
+                        const originalId = isSpotii ? playlist.id.replace('spotii-', '') : ''
+                        return (
+                            <PlaylistCard
+                                key={playlist.id}
+                                playlist={playlist}
+                                showSourceTag
+                                onClick={() => handlePlaylistClick(playlist)}
+                                onDelete={isSpotii ? () => deletePlaylist(originalId) : undefined}
+                            />
+                        )
+                    })}
                 </div>
             )}
 

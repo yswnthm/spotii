@@ -1,7 +1,13 @@
-import { Music2, Play } from "lucide-react"
+import { Music2, Play, Trash2, MoreVertical } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { Song } from "@/hooks/use-recent-playlists"
 
@@ -24,9 +30,10 @@ interface PlaylistCardProps {
     playlist: UnifiedPlaylist
     onClick?: () => void
     showSourceTag?: boolean
+    onDelete?: () => void
 }
 
-export function PlaylistCard({ playlist, onClick, showSourceTag }: PlaylistCardProps) {
+export function PlaylistCard({ playlist, onClick, showSourceTag, onDelete }: PlaylistCardProps) {
     const isSpotify = playlist.source === "spotify"
 
     const handleClick = () => {
@@ -34,6 +41,13 @@ export function PlaylistCard({ playlist, onClick, showSourceTag }: PlaylistCardP
             window.open(playlist.url, "_blank", "noopener noreferrer")
         } else if (onClick) {
             onClick()
+        }
+    }
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (onDelete) {
+            onDelete()
         }
     }
 
@@ -81,6 +95,34 @@ export function PlaylistCard({ playlist, onClick, showSourceTag }: PlaylistCardP
                         >
                             {isSpotify ? "Spotify" : "Spotii"}
                         </Badge>
+                    </div>
+                )}
+                {/* Menu Button for Spotii playlists */}
+                {!isSpotify && onDelete && (
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 rounded-full hover:bg-white/10"
+                                >
+                                    <MoreVertical className="w-3.5 h-3.5 text-white/70" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="min-w-[120px]"
+                            >
+                                <DropdownMenuItem
+                                    onClick={handleDelete}
+                                    className="text-sm cursor-pointer"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 )}
             </div>

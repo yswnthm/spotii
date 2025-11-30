@@ -85,9 +85,19 @@ export function useRecentPlaylists() {
         }
     }
 
+    const deletePlaylist = (id: string) => {
+        const updated = playlists.filter(p => p.id !== id)
+        setPlaylists(updated)
+
+        if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+        }
+    }
+
     return {
         playlists,
         savePlaylist,
+        deletePlaylist,
         getStats,
     }
 }
