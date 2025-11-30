@@ -182,7 +182,7 @@ export default function DashboardPage() {
                     // Show blurred playlists with connect overlay when not authenticated
                     <div className="relative">
                         {/* Blurred playlist grid background */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                             {[1, 2, 3, 4].map((i) => (
                                 <div
                                     key={i}
@@ -200,7 +200,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Blur and overlay */}
-                        <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center rounded-xl">
+                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center rounded-xl">
                             <div className="relative mb-6">
                                 <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
                                 <Lock className="w-16 h-16 text-primary/70 relative" />

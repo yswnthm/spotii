@@ -124,7 +124,7 @@ export default function LibraryPage() {
                     </div>
 
                     {/* Blur and overlay */}
-                    <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center rounded-xl">
+                    <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center rounded-xl">
                         <div className="relative mb-6">
                             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
                             <Lock className="w-16 h-16 text-primary/70 relative" />
@@ -183,7 +183,7 @@ export default function LibraryPage() {
                             </div>
 
                             {/* Blur and overlay */}
-                            <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center rounded-xl">
+                            <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center rounded-xl">
                                 <div className="relative mb-6">
                                     <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
                                     <Lock className="w-16 h-16 text-primary/70 relative" />
