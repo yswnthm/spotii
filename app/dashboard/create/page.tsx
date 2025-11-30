@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +23,7 @@ export default function CreatePlaylistPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [playlist, setPlaylist] = useState<any[] | null>(null)
+    const autoGenerateRef = useRef(false)
 
     // Prompt-based generation
     const [prompt, setPrompt] = useState("")
@@ -59,15 +60,20 @@ export default function CreatePlaylistPage() {
     // Handle URL query parameter for prompt
     useEffect(() => {
         const promptParam = searchParams.get("prompt")
-        if (promptParam && promptParam !== prompt) {
+        if (promptParam && !prompt) {
             setPrompt(promptParam)
             setActiveTab("prompt")
-            // Auto-generate when coming from landing page
-            setTimeout(() => {
-                handlePromptGenerate()
-            }, 100)
+            autoGenerateRef.current = true
         }
     }, [searchParams])
+
+    // Auto-generate when prompt is set from URL
+    useEffect(() => {
+        if (autoGenerateRef.current && prompt && !isLoading) {
+            autoGenerateRef.current = false
+            handlePromptGenerate()
+        }
+    }, [prompt])
 
     const handlePromptGenerate = async () => {
         if (!prompt.trim()) return
