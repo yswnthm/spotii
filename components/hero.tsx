@@ -66,20 +66,19 @@ export default function Hero() {
               </div>
 
               {/* Form */}
-              <div className="max-w-md mx-auto relative group w-full">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                <form onSubmit={handleSubmit} className="relative flex gap-2 p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
+              <div className="max-w-md mx-auto w-full">
+                <form onSubmit={handleSubmit} className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg">
                   <div className="relative flex-1">
-                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
+                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
                     <Input
                       placeholder="Describe your vibe..."
-                      className="pl-9 border-0 shadow-none focus-visible:ring-0 bg-transparent h-10 text-white placeholder:text-white/50"
+                      className="pl-9 border-0 shadow-none focus-visible:ring-0 bg-transparent h-10 text-white placeholder:text-white/40"
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" className="rounded-3xl bg-white text-black hover:bg-white/90" disabled={!prompt || isLoading}>
+                  <Button type="submit" className="rounded-md bg-white/90 text-black hover:bg-white" disabled={!prompt || isLoading}>
                     {isLoading ? "Generating..." : "Generate"}
                   </Button>
                 </form>
