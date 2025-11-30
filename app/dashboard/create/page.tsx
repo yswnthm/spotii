@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -194,6 +195,14 @@ export default function CreatePlaylistPage() {
                 if (data.playlistUrl) {
                     window.open(data.playlistUrl, "_blank")
                 }
+            } else if (response.status === 401) {
+                // User is not authenticated with Spotify, redirect to sign in
+                toast({
+                    title: "Spotify login required",
+                    description: "Redirecting to Spotify sign-in...",
+                })
+                // Redirect to Spotify sign-in
+                await signIn("spotify", { callbackUrl: window.location.href })
             } else {
                 throw new Error(data.error || "Failed to save playlist")
             }
