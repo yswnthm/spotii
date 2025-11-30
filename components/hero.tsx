@@ -4,13 +4,32 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import { ArrowRight, Sparkles } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 export default function Hero() {
   const [prompt, setPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [currentExampleIndex, setCurrentExampleIndex] = useState(0)
   const router = useRouter()
+
+  const examplePrompts = [
+    "Late night coding session with lo-fi beats",
+    "Energetic Bollywood workout mix",
+    "Romantic Telugu songs for a rainy evening",
+    "Chill indie vibes for studying",
+    "High energy EDM for dancing",
+    "Soulful Malayalam melodies for relaxation"
+  ]
+
+  // Auto-rotate examples
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentExampleIndex((prev) => (prev + 1) % examplePrompts.length)
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,17 +85,29 @@ export default function Hero() {
                 </form>
               </div>
 
-              <div className="pt-4 text-sm text-white/80">
-                <span className="mr-2">Try example:</span>
-                <button
-                  onClick={() => {
-                    const examplePrompt = "Late night coding session with lo-fi beats"
-                    router.push(`/dashboard/create?prompt=${encodeURIComponent(examplePrompt)}`)
-                  }}
-                  className="underline hover:text-white transition-colors"
-                >
-                  "Late night coding session"
-                </button>
+              <div className="pt-4 text-sm text-white/80 flex items-center justify-center gap-2">
+                <span>Try example:</span>
+                <div className="relative h-6 overflow-hidden inline-block min-w-[280px]">
+                  {examplePrompts.map((example, index) => (
+                    <button
+                      key={example}
+                      onClick={() => {
+                        router.push(`/dashboard/create?prompt=${encodeURIComponent(example)}`)
+                      }}
+                      className="absolute left-0 underline hover:text-white transition-all duration-500 ease-in-out whitespace-nowrap"
+                      style={{
+                        opacity: currentExampleIndex === index ? 1 : 0,
+                        transform: currentExampleIndex === index
+                          ? 'translateY(0)'
+                          : currentExampleIndex > index || (currentExampleIndex === 0 && index === examplePrompts.length - 1)
+                            ? 'translateY(-100%)'
+                            : 'translateY(100%)',
+                      }}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
