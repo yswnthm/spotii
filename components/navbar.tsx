@@ -32,7 +32,7 @@ export default function Navbar() {
               Sign in
             </Button>
           </Link>
-          <Link href="/login">
+          <Link href="/dashboard">
             <Button size="sm" className="bg-white text-black hover:bg-white/90 rounded-full px-4">
               Get Started
             </Button>
