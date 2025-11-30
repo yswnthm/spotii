@@ -103,8 +103,9 @@ export default function LibraryPage() {
                     </p>
                 </div>
             ) : spotifyError && unifiedSpotiiPlaylists.length === 0 ? (
-                // Show locked playlists when not authenticated and no Spotii playlists
-                <div className="space-y-6">
+                // Show blurred playlists with connect overlay when not authenticated and no Spotii playlists
+                <div className="relative">
+                    {/* Blurred playlist grid background */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <div
@@ -112,41 +113,34 @@ export default function LibraryPage() {
                                 className="group relative bg-white/[0.01] border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
                             >
                                 <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
-                                    {/* Blurred background effect */}
-                                    <div className="absolute inset-0 backdrop-blur-md bg-white/5" />
-
-                                    {/* Lock icon overlay */}
-                                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Lock className="w-8 h-8 text-white/50" />
-                                        </div>
-                                    </div>
-
-                                    {/* Placeholder album art */}
-                                    <Music className="w-12 h-12 text-white/20 blur-sm" />
+                                    <Music className="w-12 h-12 text-white/20" />
                                 </div>
                                 <div className="p-4">
-                                    <div className="h-4 bg-white/10 rounded w-3/4 mb-2 blur-sm" />
-                                    <div className="h-3 bg-white/5 rounded w-1/2 blur-sm" />
+                                    <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+                                    <div className="h-3 bg-white/5 rounded w-1/2" />
                                 </div>
                             </div>
                         ))}
+                    </div>
 
-                        {/* Connect Spotify Card */}
-                        <div className="group relative bg-primary/10 border-2 border-primary/30 border-dashed rounded-lg overflow-hidden backdrop-blur-sm flex flex-col items-center justify-center p-6 min-h-[200px] sm:col-span-2 md:col-span-3 lg:col-span-5 xl:col-span-6">
-                            <Lock className="w-12 h-12 text-primary/70 mb-3" />
-                            <h3 className="text-lg font-semibold mb-2 text-white">Connect Your Spotify</h3>
-                            <p className="text-sm text-white/70 mb-4 text-center max-w-md">
-                                Link your Spotify account to see and manage your playlists
-                            </p>
-                            <Button
-                                onClick={() => signIn('spotify', { callbackUrl: '/dashboard/library' })}
-                                className="bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold"
-                            >
-                                <Music className="w-4 h-4 mr-2" />
-                                Connect Spotify
-                            </Button>
+                    {/* Blur and overlay */}
+                    <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center rounded-xl">
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+                            <Lock className="w-16 h-16 text-primary/70 relative" />
                         </div>
+                        <h3 className="text-2xl font-semibold mb-3 text-white">Connect Your Spotify</h3>
+                        <p className="text-sm text-white/70 mb-6 max-w-md px-4">
+                            Link your Spotify account to access and manage all your playlists right here
+                        </p>
+                        <Button
+                            onClick={() => signIn('spotify', { callbackUrl: '/dashboard/library' })}
+                            size="lg"
+                            className="bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold"
+                        >
+                            <Music className="w-5 h-5 mr-2" />
+                            Connect Spotify
+                        </Button>
                     </div>
                 </div>
             ) : spotifyError && unifiedSpotiiPlaylists.length > 0 ? (
@@ -169,38 +163,41 @@ export default function LibraryPage() {
                     {/* Locked Spotify Section */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white">Your Spotify Playlists</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                            {[1, 2, 3, 4, 5, 6].map((i) => (
-                                <div
-                                    key={i}
-                                    className="group relative bg-white/[0.01] border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
-                                >
-                                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
-                                        <div className="absolute inset-0 backdrop-blur-md bg-white/5" />
-                                        <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <Lock className="w-8 h-8 text-white/50" />
+                        <div className="relative">
+                            {/* Blurred playlist grid background */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div
+                                        key={i}
+                                        className="group relative bg-white/[0.01] border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
+                                    >
+                                        <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
+                                            <Music className="w-12 h-12 text-white/20" />
                                         </div>
-                                        <Music className="w-12 h-12 text-white/20 blur-sm" />
+                                        <div className="p-4">
+                                            <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+                                            <div className="h-3 bg-white/5 rounded w-1/2" />
+                                        </div>
                                     </div>
-                                    <div className="p-4">
-                                        <div className="h-4 bg-white/10 rounded w-3/4 mb-2 blur-sm" />
-                                        <div className="h-3 bg-white/5 rounded w-1/2 blur-sm" />
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
 
-                            {/* Connect Spotify Card */}
-                            <div className="group relative bg-primary/10 border-2 border-primary/30 border-dashed rounded-lg overflow-hidden backdrop-blur-sm flex flex-col items-center justify-center p-6 min-h-[200px] sm:col-span-2 md:col-span-3 lg:col-span-5 xl:col-span-6">
-                                <Lock className="w-12 h-12 text-primary/70 mb-3" />
-                                <h3 className="text-lg font-semibold mb-2 text-white">Connect Your Spotify</h3>
-                                <p className="text-sm text-white/70 mb-4 text-center max-w-md">
-                                    Link your Spotify account to see and manage your playlists
+                            {/* Blur and overlay */}
+                            <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex flex-col items-center justify-center rounded-xl">
+                                <div className="relative mb-6">
+                                    <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
+                                    <Lock className="w-16 h-16 text-primary/70 relative" />
+                                </div>
+                                <h3 className="text-2xl font-semibold mb-3 text-white">Connect Your Spotify</h3>
+                                <p className="text-sm text-white/70 mb-6 max-w-md px-4">
+                                    Link your Spotify account to access and manage all your playlists right here
                                 </p>
                                 <Button
                                     onClick={() => signIn('spotify', { callbackUrl: '/dashboard/library' })}
+                                    size="lg"
                                     className="bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold"
                                 >
-                                    <Music className="w-4 h-4 mr-2" />
+                                    <Music className="w-5 h-5 mr-2" />
                                     Connect Spotify
                                 </Button>
                             </div>
