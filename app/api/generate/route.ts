@@ -28,7 +28,9 @@ const MODEL = useGroq
 
 export async function POST(req: Request) {
     try {
+        const body = await req.json()
         const {
+            prompt: userPrompt,
             mood,
             genre,
             languages,
@@ -41,25 +43,45 @@ export async function POST(req: Request) {
             explicitContent,
             duration,
             trackCount
-        } = await req.json()
+        } = body
 
         // Determine number of songs
-        const count = trackCount ? parseInt(trackCount) : Math.ceil(parseInt(duration) / 3.5)
+        const count = trackCount ? parseInt(trackCount) : Math.ceil(parseInt(duration || 30) / 3.5)
 
-        // Construct a detailed prompt
-        let criteria = `    - Mood/Vibe: ${mood}\n`
-        if (genre) criteria += `    - Genre: ${genre}\n`
-        if (languages && languages.length > 0) criteria += `    - Languages: ${languages.join(", ")}\n`
-        if (activity) criteria += `    - Activity/Occasion: ${activity}\n`
-        if (energy) criteria += `    - Energy Level: ${energy}/100 (0=Calm, 100=Energetic)\n`
-        if (tempo) criteria += `    - Tempo: ${tempo}\n`
-        if (popularity) criteria += `    - Popularity: ${popularity}/100 (0=Hidden Gems, 100=Mainstream Hits)\n`
-        if (vocalPreference) criteria += `    - Vocal Type: ${vocalPreference}\n`
-        if (era) criteria += `    - Era: ${era}\n`
-        if (explicitContent) criteria += `    - Explicit Content: ${explicitContent}\n`
-        criteria += `    - Length: Approximately ${count} songs\n`
+        let prompt: string
 
-        const prompt = `Create a music playlist with the following criteria:
+        // If a direct prompt is provided, use it
+        if (userPrompt && userPrompt.trim()) {
+            prompt = `Create a music playlist based on this request: "${userPrompt.trim()}"
+    
+    Return EXACTLY ${count} songs that match this request.
+    
+    IMPORTANT: Pay close attention to:
+    - The language requested (e.g., Telugu, Hindi, Tamil, etc.)
+    - The mood/vibe/occasion described
+    - Return songs that EXACTLY match the requested language
+    
+    Return a JSON object with a "songs" array. Each song should have:
+    - title (string) - in the original language
+    - artist (string)
+    - album (string, optional)
+    
+    Only return real, existing songs that perfectly match this request.`
+        } else {
+            // Construct a detailed prompt from structured fields
+            let criteria = `    - Mood/Vibe: ${mood}\n`
+            if (genre) criteria += `    - Genre: ${genre}\n`
+            if (languages && languages.length > 0) criteria += `    - Languages: ${languages.join(", ")}\n`
+            if (activity) criteria += `    - Activity/Occasion: ${activity}\n`
+            if (energy) criteria += `    - Energy Level: ${energy}/100 (0=Calm, 100=Energetic)\n`
+            if (tempo) criteria += `    - Tempo: ${tempo}\n`
+            if (popularity) criteria += `    - Popularity: ${popularity}/100 (0=Hidden Gems, 100=Mainstream Hits)\n`
+            if (vocalPreference) criteria += `    - Vocal Type: ${vocalPreference}\n`
+            if (era) criteria += `    - Era: ${era}\n`
+            if (explicitContent) criteria += `    - Explicit Content: ${explicitContent}\n`
+            criteria += `    - Length: Approximately ${count} songs\n`
+
+            prompt = `Create a music playlist with the following criteria:
 ${criteria}
     
     Return a JSON object with a "songs" array. Each song should have:
@@ -68,13 +90,14 @@ ${criteria}
     - album (string, optional)
     
     Only return real, existing songs that fit this vibe perfectly. Ensure the songs match the requested languages and genres.`
+        }
 
         const completion = await client.chat.completions.create({
             model: MODEL,
             messages: [
                 {
                     role: "system",
-                    content: "You are a music expert who creates perfect playlists. Always respond with valid JSON matching the requested schema.",
+                    content: "You are a music expert who creates perfect playlists. Always respond with valid JSON matching the requested schema. When a specific language is requested, you MUST return songs in ONLY that language.",
                 },
                 {
                     role: "user",

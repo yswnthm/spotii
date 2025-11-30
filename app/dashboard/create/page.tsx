@@ -250,7 +250,7 @@ export default function CreatePlaylistPage() {
                                         {[
                                             "Late night coding session with lo-fi beats",
                                             "Energetic Bollywood workout mix",
-                                            "Romantic Tamil songs for a rainy evening",
+                                            "Romantic Telugu songs for a rainy evening",
                                             "Chill indie vibes for studying"
                                         ].map((example) => (
                                             <button
