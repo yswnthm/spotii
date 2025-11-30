@@ -7,6 +7,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import { signOut } from "next-auth/react"
 
 export default function DashboardLayout({
     children,
@@ -91,6 +92,7 @@ export default function DashboardLayout({
                             "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10",
                             isCollapsed ? "justify-center px-2" : "justify-start"
                         )}
+                        onClick={() => signOut({ callbackUrl: '/' })}
                         title={isCollapsed ? "Sign Out" : undefined}
                     >
                         <LogOut className="w-5 h-5 shrink-0" />
