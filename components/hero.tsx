@@ -19,7 +19,7 @@ export default function Hero() {
     setIsLoading(true)
     // Simulate navigation or action
     setTimeout(() => {
-      router.push(`/create?prompt=${encodeURIComponent(prompt)}`)
+      router.push(`/dashboard/create?prompt=${encodeURIComponent(prompt)}`)
     }, 500)
   }
 

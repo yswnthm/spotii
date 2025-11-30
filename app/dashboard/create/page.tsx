@@ -59,9 +59,13 @@ export default function CreatePlaylistPage() {
     // Handle URL query parameter for prompt
     useEffect(() => {
         const promptParam = searchParams.get("prompt")
-        if (promptParam) {
+        if (promptParam && promptParam !== prompt) {
             setPrompt(promptParam)
             setActiveTab("prompt")
+            // Auto-generate when coming from landing page
+            setTimeout(() => {
+                handlePromptGenerate()
+            }, 100)
         }
     }, [searchParams])
 
