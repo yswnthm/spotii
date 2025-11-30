@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,9 +19,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function CreatePlaylistPage() {
     const { toast } = useToast()
     const { savePlaylist } = useRecentPlaylists()
+    const searchParams = useSearchParams()
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [playlist, setPlaylist] = useState<any[] | null>(null)
+
+    // Prompt-based generation
+    const [prompt, setPrompt] = useState("")
+    const [activeTab, setActiveTab] = useState("basic")
 
     // Basic Form State
     const [mood, setMood] = useState("")
@@ -48,6 +54,57 @@ export default function CreatePlaylistPage() {
                 ? prev.filter(l => l !== lang)
                 : [...prev, lang]
         )
+    }
+
+    // Handle URL query parameter for prompt
+    useEffect(() => {
+        const promptParam = searchParams.get("prompt")
+        if (promptParam) {
+            setPrompt(promptParam)
+            setActiveTab("prompt")
+        }
+    }, [searchParams])
+
+    const handlePromptGenerate = async () => {
+        if (!prompt.trim()) return
+
+        setIsLoading(true)
+        setPlaylist(null)
+
+        try {
+            const response = await fetch("/api/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prompt: prompt.trim()
+                }),
+            })
+
+            const data = await response.json()
+            if (data.songs) {
+                setPlaylist(data.songs)
+
+                // Save to localStorage
+                const playlistName = `${prompt.substring(0, 30)}${prompt.length > 30 ? "..." : ""} - AI Generated`
+
+                savePlaylist({
+                    name: playlistName,
+                    mood: "AI Prompt",
+                    genre: "Mixed",
+                    era: "modern",
+                    songs: data.songs,
+                })
+            }
+        } catch (error) {
+            console.error("Failed to generate", error)
+            toast({
+                title: "Generation failed",
+                description: "Please try again with a different prompt.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const handleGenerate = async () => {
@@ -156,11 +213,86 @@ export default function CreatePlaylistPage() {
                 <div className="lg:col-span-1">
                     <ScrollArea className="h-[calc(100vh-12rem)]">
                         <div className="space-y-4 bg-white/[0.02] backdrop-blur-md border border-white/20 p-6 rounded-xl">
-                            <Tabs defaultValue="basic" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 mb-4">
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <TabsList className="grid w-full grid-cols-3 mb-4">
+                                    <TabsTrigger value="prompt">Prompt</TabsTrigger>
                                     <TabsTrigger value="basic">Basic</TabsTrigger>
                                     <TabsTrigger value="advanced">Advanced</TabsTrigger>
                                 </TabsList>
+
+                                <TabsContent value="prompt" className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-white">Describe your vibe</Label>
+                                            <p className="text-sm text-white/60">Tell us what you're feeling, and we'll curate the perfect playlist</p>
+                                        </div>
+
+                                        {/* Prompt Input - matching hero.tsx style */}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+                                            <div className="relative flex gap-2 p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
+                                                <div className="relative flex-1">
+                                                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
+                                                    <Input
+                                                        placeholder="Describe your vibe..."
+                                                        className="pl-9 border-0 shadow-none focus-visible:ring-0 bg-transparent h-10 text-white placeholder:text-white/50"
+                                                        value={prompt}
+                                                        onChange={(e) => setPrompt(e.target.value)}
+                                                        disabled={isLoading}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                                e.preventDefault()
+                                                                handlePromptGenerate()
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Example Prompts */}
+                                        <div className="space-y-2">
+                                            <p className="text-sm text-white/70">Try examples:</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    "Late night coding session with lo-fi beats",
+                                                    "Energetic Bollywood workout mix",
+                                                    "Romantic Tamil songs for a rainy evening",
+                                                    "Chill indie vibes for studying"
+                                                ].map((example) => (
+                                                    <button
+                                                        key={example}
+                                                        onClick={() => setPrompt(example)}
+                                                        className="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/70 hover:text-white transition-colors"
+                                                        disabled={isLoading}
+                                                    >
+                                                        {example}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Generate Button for Prompt */}
+                                        <Button
+                                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                                            size="lg"
+                                            onClick={handlePromptGenerate}
+                                            disabled={isLoading || !prompt.trim()}
+                                        >
+                                            {isLoading ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    Generating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles className="w-4 h-4 mr-2" />
+                                                    Generate from Prompt
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </TabsContent>
 
                                 <TabsContent value="basic" className="space-y-6">
                                     {/* Mood */}
