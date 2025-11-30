@@ -42,7 +42,7 @@ export default function DashboardLayout({
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "border-r border-white/10 bg-black/5 backdrop-blur-md hidden md:flex flex-col transition-all duration-300 ease-in-out relative z-10",
+                    "border-r border-white/10 bg-black/40 backdrop-blur-md hidden md:flex flex-col transition-all duration-300 ease-in-out relative z-10",
                     isCollapsed ? "w-20" : "w-64"
                 )}
             >
