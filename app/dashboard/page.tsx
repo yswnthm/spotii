@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Play, Music2, Music, Loader2 } from "lucide-react"
+import { Plus, Play, Music2, Music, Loader2, Lock } from "lucide-react"
 import Link from "next/link"
 import { useRecentPlaylists } from "@/hooks/use-recent-playlists"
 import Image from "next/image"
 import { PlaylistCard, UnifiedPlaylist } from "@/components/playlist-card"
 import { PlaylistDetailsDialog } from "@/components/playlist-details-dialog"
+import { signIn } from "next-auth/react"
 
 interface SpotifyPlaylist {
     id: string
@@ -173,21 +174,60 @@ export default function DashboardPage() {
             <div className="space-y-4">
                 <h2 className="text-xl font-bold text-white">Your Spotify Playlists</h2>
                 {isLoadingSpotify ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center border border-border rounded-xl">
+                    <div className="flex flex-col items-center justify-center py-12 text-center border border-white/20 rounded-xl bg-white/[0.01] backdrop-blur-sm">
                         <Loader2 className="w-8 h-8 mb-4 text-primary animate-spin" />
-                        <p className="text-sm text-muted-foreground">Loading your Spotify playlists...</p>
+                        <p className="text-sm text-white/70">Loading your Spotify playlists...</p>
                     </div>
                 ) : spotifyError ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center border border-border rounded-xl bg-muted/20">
-                        <Music className="w-12 h-12 mb-4 text-muted-foreground/50" />
-                        <h3 className="text-lg font-semibold mb-2">Could not load playlists</h3>
-                        <p className="text-sm text-muted-foreground">{spotifyError}</p>
+                    // Show locked playlists when not authenticated
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <div
+                                key={i}
+                                className="group relative bg-white/[0.01] border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm"
+                            >
+                                <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
+                                    {/* Blurred background effect */}
+                                    <div className="absolute inset-0 backdrop-blur-md bg-white/5" />
+
+                                    {/* Lock icon overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Lock className="w-8 h-8 text-white/50" />
+                                        </div>
+                                    </div>
+
+                                    {/* Placeholder album art */}
+                                    <Music2 className="w-12 h-12 text-white/20 blur-sm" />
+                                </div>
+                                <div className="p-4">
+                                    <div className="h-4 bg-white/10 rounded w-3/4 mb-2 blur-sm" />
+                                    <div className="h-3 bg-white/5 rounded w-1/2 blur-sm" />
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Connect Spotify Card */}
+                        <div className="group relative bg-primary/10 border-2 border-primary/30 border-dashed rounded-lg overflow-hidden backdrop-blur-sm flex flex-col items-center justify-center p-6 min-h-[200px] sm:col-span-2 md:col-span-3 lg:col-span-5 xl:col-span-6">
+                            <Lock className="w-12 h-12 text-primary/70 mb-3" />
+                            <h3 className="text-lg font-semibold mb-2 text-white">Connect Your Spotify</h3>
+                            <p className="text-sm text-white/70 mb-4 text-center max-w-md">
+                                Link your Spotify account to see and manage your playlists
+                            </p>
+                            <Button
+                                onClick={() => signIn('spotify', { callbackUrl: '/dashboard' })}
+                                className="bg-[#1DB954] hover:bg-[#1ed760] text-white font-semibold"
+                            >
+                                <Music className="w-4 h-4 mr-2" />
+                                Connect Spotify
+                            </Button>
+                        </div>
                     </div>
                 ) : spotifyPlaylists.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border rounded-xl">
-                        <Music className="w-12 h-12 mb-4 text-muted-foreground/50" />
-                        <h3 className="text-lg font-semibold mb-2">No Spotify playlists</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-white/20 rounded-xl bg-white/[0.01] backdrop-blur-sm">
+                        <Music className="w-12 h-12 mb-4 text-white/50" />
+                        <h3 className="text-lg font-semibold mb-2 text-white">No Spotify playlists</h3>
+                        <p className="text-sm text-white/70">
                             You don't have any playlists on Spotify yet
                         </p>
                     </div>
