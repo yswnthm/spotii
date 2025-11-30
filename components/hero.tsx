@@ -69,7 +69,10 @@ export default function Hero() {
               <div className="pt-4 text-sm text-white/80">
                 <span className="mr-2">Try example:</span>
                 <button
-                  onClick={() => setPrompt("Late night coding session with lo-fi beats")}
+                  onClick={() => {
+                    const examplePrompt = "Late night coding session with lo-fi beats"
+                    router.push(`/dashboard/create?prompt=${encodeURIComponent(examplePrompt)}`)
+                  }}
                   className="underline hover:text-white transition-colors"
                 >
                   "Late night coding session"
