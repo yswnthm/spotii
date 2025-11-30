@@ -39,7 +39,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.86.0",
-    "@vercel/analytics": "latest",
+    "@vercel/analytics": "^1.5.0",
     "ai": "^5.0.104",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",

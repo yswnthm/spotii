@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function CreatePlaylistPage() {
+function CreatePlaylistContent() {
     const { toast } = useToast()
     const { savePlaylist } = useRecentPlaylists()
     const searchParams = useSearchParams()
@@ -689,5 +689,23 @@ export default function CreatePlaylistPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function CreatePlaylistPage() {
+    return (
+        <Suspense fallback={
+            <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+                <div className="h-full min-h-[500px] flex flex-col items-center justify-center space-y-4">
+                    <div className="relative w-16 h-16">
+                        <div className="absolute inset-0 border-4 border-white/20 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p className="text-white/70 animate-pulse">Loading...</p>
+                </div>
+            </div>
+        }>
+            <CreatePlaylistContent />
+        </Suspense>
     )
 }
