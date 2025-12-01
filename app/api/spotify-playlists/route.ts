@@ -30,10 +30,10 @@ export async function GET() {
         })
 
         if (!response.ok) {
-            const errorData = await response.json()
-            console.error("Spotify API error:", errorData)
+            const errorText = await response.text()
+            console.error("Spotify API error:", errorText)
             return NextResponse.json(
-                { error: "Failed to fetch playlists from Spotify" },
+                { error: "Failed to fetch playlists from Spotify", details: errorText },
                 { status: response.status }
             )
         }

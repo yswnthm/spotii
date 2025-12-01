@@ -50,7 +50,9 @@ export async function POST(req: Request) {
         })
 
         if (!userResponse.ok) {
-            throw new Error("Failed to fetch user data")
+            const errorText = await userResponse.text()
+            console.error("Spotify User Data Error:", errorText)
+            throw new Error(`Failed to fetch user data: ${userResponse.status} ${userResponse.statusText}`)
         }
 
         const userData = await userResponse.json()
