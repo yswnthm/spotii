@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import VisualizerCanvas from './components/VisualizerCanvas'
 import PlaybackControls from './components/PlaybackControls'
@@ -29,7 +29,7 @@ export default function VisualizerPage() {
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
     // Fetch currently playing track
-    const fetchCurrentlyPlaying = async () => {
+    const fetchCurrentlyPlaying = useCallback(async () => {
         if (!session?.accessToken) return
 
         try {
@@ -52,10 +52,10 @@ export default function VisualizerPage() {
             console.error('Error fetching currently playing:', err)
             // Don't set error state for polling failures to avoid disrupting the experience
         }
-    }
+    }, [session?.accessToken])
 
     // Fetch background albums (new releases)
-    const fetchBackgroundAlbums = async () => {
+    const fetchBackgroundAlbums = useCallback(async () => {
         if (!session?.accessToken) return
 
         try {
@@ -70,7 +70,7 @@ export default function VisualizerPage() {
         } catch (err) {
             console.error('Error fetching background albums:', err)
         }
-    }
+    }, [session?.accessToken])
 
     // Initial fetch
     useEffect(() => {
@@ -94,7 +94,8 @@ export default function VisualizerPage() {
         }
 
         initialize()
-    }, [session])
+    }, [session, fetchCurrentlyPlaying, fetchBackgroundAlbums])
+
 
     // Polling for currently playing track
     useEffect(() => {
@@ -110,10 +111,11 @@ export default function VisualizerPage() {
                 clearInterval(pollingIntervalRef.current)
             }
         }
-    }, [session])
+    }, [session?.accessToken, fetchCurrentlyPlaying])
+
 
     // Playback control handlers
-    const handlePlaybackControl = async (action: 'play' | 'pause' | 'next' | 'previous') => {
+    const handlePlaybackControl = useCallback(async (action: 'play' | 'pause' | 'next' | 'previous') => {
         try {
             const response = await fetch('/api/spotify/playback-control', {
                 method: 'POST',
@@ -123,8 +125,13 @@ export default function VisualizerPage() {
                 body: JSON.stringify({ action }),
             })
 
+            const data = await response.json()
+
             if (!response.ok) {
-                throw new Error(`Failed to ${action}`)
+                // Show user-friendly error message
+                console.error(`Playback control error:`, data)
+                alert(data.details || data.error || `Failed to ${action}`)
+                return
             }
 
             // Immediately fetch updated state
@@ -133,8 +140,9 @@ export default function VisualizerPage() {
             }, 300)
         } catch (err) {
             console.error(`Error ${action}ing playback:`, err)
+            alert(`Error controlling playback. Please try again.`)
         }
-    }
+    }, [fetchCurrentlyPlaying])
 
     const handlePlayPause = () => {
         handlePlaybackControl(isPlaying ? 'pause' : 'play')

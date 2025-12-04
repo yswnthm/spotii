@@ -59,6 +59,27 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: true, action })
         }
 
+        // Handle common error cases with helpful messages
+        if (response.status === 403) {
+            return NextResponse.json(
+                {
+                    error: 'Spotify Premium required for playback control',
+                    details: 'Controlling playback requires a Spotify Premium account. Please upgrade at spotify.com/premium'
+                },
+                { status: 403 }
+            )
+        }
+
+        if (response.status === 404) {
+            return NextResponse.json(
+                {
+                    error: 'No active device found',
+                    details: 'Please start playing music on Spotify (any device) first, then try again.'
+                },
+                { status: 404 }
+            )
+        }
+
         if (!response.ok) {
             const error = await response.json().catch(() => ({}))
             return NextResponse.json(
