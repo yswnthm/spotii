@@ -29,7 +29,7 @@ export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, 
         let isCleanedUp = false
 
         // Combine album covers: current track repeated ~12 times + background albums
-        const currentTrackRepeats = 12
+        const currentTrackRepeats = 3
         const combinedAlbums = [
             ...Array(currentTrackRepeats).fill(currentAlbumCover),
             ...backgroundAlbums,

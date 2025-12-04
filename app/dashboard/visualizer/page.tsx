@@ -12,7 +12,7 @@ interface Track {
     id: string
     name: string
     artists: string[]
-    albumId: string
+    artistIds: string[]
     albumCover: string
     duration: number
     progressMs: number
@@ -55,21 +55,25 @@ export default function VisualizerPage() {
         }
     }, [session?.accessToken])
 
-    // Fetch similar songs based on current track
-    const fetchSimilarSongs = useCallback(async (trackId: string, albumId: string) => {
+    // Fetch background albums (new releases)
+    const fetchBackgroundAlbums = useCallback(async (artistId?: string) => {
         if (!session?.accessToken) return
 
         try {
-            const response = await fetch(`/api/spotify/recommendations?trackId=${trackId}&albumId=${albumId}`)
+            const url = artistId
+                ? `/api/spotify/new-releases?artistId=${artistId}`
+                : '/api/spotify/new-releases'
+
+            const response = await fetch(url)
 
             if (!response.ok) {
-                throw new Error('Failed to fetch similar songs')
+                throw new Error('Failed to fetch background albums')
             }
 
             const data = await response.json()
             setBackgroundAlbums(data.covers || [])
         } catch (err) {
-            console.error('Error fetching similar songs:', err)
+            console.error('Error fetching background albums:', err)
         }
     }, [session?.accessToken])
 
@@ -111,13 +115,15 @@ export default function VisualizerPage() {
         }
     }, [session?.accessToken, fetchCurrentlyPlaying])
 
-
-    // Fetch similar songs when current track changes
+    // Fetch background albums when current track changes
     useEffect(() => {
-        if (currentTrack?.id && currentTrack?.albumId) {
-            fetchSimilarSongs(currentTrack.id, currentTrack.albumId)
+        if (currentTrack?.artistIds?.[0]) {
+            fetchBackgroundAlbums(currentTrack.artistIds[0])
+        } else if (session?.accessToken) {
+            // Fallback to global releases if no artist ID
+            fetchBackgroundAlbums()
         }
-    }, [currentTrack?.id, currentTrack?.albumId, fetchSimilarSongs])
+    }, [currentTrack?.artistIds?.[0], session?.accessToken, fetchBackgroundAlbums])
 
 
     // Playback control handlers

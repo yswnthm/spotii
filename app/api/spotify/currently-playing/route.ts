@@ -47,10 +47,11 @@ export async function GET(request: NextRequest) {
                 id: data.item.id,
                 name: data.item.name,
                 artists: data.item.artists.map((artist: any) => artist.name),
-                albumId: data.item.album.id,
+                artistIds: data.item.artists.map((artist: any) => artist.id),
                 albumCover: data.item.album.images[0]?.url,
                 duration: data.item.duration_ms,
                 progressMs: data.progress_ms,
+                availableMarkets: data.item.available_markets || [],
             } : null,
         }
 
