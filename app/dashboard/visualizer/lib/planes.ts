@@ -67,9 +67,9 @@ export default class Planes {
     }
 
     createGeometry() {
-        // Match reference project: 1 x 1.69 (album aspect ratio) with scale of 2
+        // 1 x 1.69 (album aspect ratio) - reduced scale for better visibility
         this.geometry = new THREE.PlaneGeometry(1, 1.69, 1, 1)
-        this.geometry.scale(2, 2, 2)
+        this.geometry.scale(1, 1, 1)  // Reduced from 2 to make covers smaller
     }
 
     async createAtlas(urls: string[]) {
