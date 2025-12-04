@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import VisualizerCanvas from './components/VisualizerCanvas'
 import { Button } from '@/components/ui/button'
-import { Music, Loader2 } from 'lucide-react'
+import { Music, Loader2, Maximize2, Minimize2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function VisualizerPage() {
@@ -12,6 +12,8 @@ export default function VisualizerPage() {
     const [albumCovers, setAlbumCovers] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isFullscreen, setIsFullscreen] = useState(false)
+    const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         async function fetchAlbumCovers() {
@@ -39,6 +41,43 @@ export default function VisualizerPage() {
 
         fetchAlbumCovers()
     }, [session])
+
+    // Fullscreen handlers
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement)
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Toggle fullscreen with F key or F11
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault()
+                toggleFullscreen()
+            }
+        }
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange)
+        document.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange)
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [])
+
+    const toggleFullscreen = async () => {
+        if (!containerRef.current) return
+
+        try {
+            if (!document.fullscreenElement) {
+                await containerRef.current.requestFullscreen()
+            } else {
+                await document.exitFullscreen()
+            }
+        } catch (err) {
+            console.error('Error toggling fullscreen:', err)
+        }
+    }
 
     // Not authenticated with Spotify
     if (!session?.accessToken) {
@@ -125,14 +164,31 @@ export default function VisualizerPage() {
 
     // Render visualizer
     return (
-        <div className="relative h-screen w-full overflow-hidden bg-black">
+        <div ref={containerRef} className="relative h-screen w-full overflow-hidden bg-black">
             <VisualizerCanvas albumCovers={albumCovers} />
+
+            {/* Fullscreen toggle button */}
+            <div className="absolute top-4 right-4 z-10">
+                <Button
+                    onClick={toggleFullscreen}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-black/40 backdrop-blur-sm border border-white/10 hover:bg-black/60 hover:border-white/20 text-white/80 hover:text-white"
+                    title={isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"}
+                >
+                    {isFullscreen ? (
+                        <Minimize2 className="w-5 h-5" />
+                    ) : (
+                        <Maximize2 className="w-5 h-5" />
+                    )}
+                </Button>
+            </div>
 
             {/* Instructions overlay */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3">
                     <p className="text-sm text-white/80 text-center">
-                        <span className="font-medium">Drag</span> to move • <span className="font-medium">Scroll</span> to zoom
+                        <span className="font-medium">Drag</span> to move • <span className="font-medium">Scroll</span> to zoom • <span className="font-medium">F</span> for fullscreen
                     </p>
                 </div>
             </div>
