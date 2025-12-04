@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { action } = body as { action: PlaybackAction }
+        const { action, contextUri } = body as { action: PlaybackAction; contextUri?: string }
 
         if (!action || !['play', 'pause', 'next', 'previous'].includes(action)) {
             return NextResponse.json(
@@ -47,12 +47,21 @@ export async function POST(request: NextRequest) {
 
         const endpoint = endpoints[action]
 
-        const response = await fetch(endpoint.url, {
+        // Prepare request options
+        const requestOptions: RequestInit = {
             method: endpoint.method,
             headers: {
                 Authorization: `Bearer ${session.accessToken}`,
+                'Content-Type': 'application/json',
             },
-        })
+        }
+
+        // If playing and a contextUri is provided, add it to the body
+        if (action === 'play' && contextUri) {
+            requestOptions.body = JSON.stringify({ context_uri: contextUri })
+        }
+
+        const response = await fetch(endpoint.url, requestOptions)
 
         // Spotify returns 204 No Content on success for these endpoints
         if (response.status === 204) {

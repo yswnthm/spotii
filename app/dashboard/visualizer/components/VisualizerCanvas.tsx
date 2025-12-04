@@ -5,14 +5,20 @@ import * as THREE from 'three'
 import Planes from '../lib/planes'
 import { Size, Dimensions } from '../lib/types'
 
+interface AlbumData {
+    uri: string
+    cover: string
+}
+
 interface VisualizerCanvasProps {
     currentAlbumCover: string
-    backgroundAlbums: string[]
+    backgroundAlbums: AlbumData[]
     isPlaying: boolean
+    onAlbumClick?: (albumUri: string) => void
 }
 
 
-export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, isPlaying }: VisualizerCanvasProps) {
+export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, isPlaying, onAlbumClick }: VisualizerCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const sceneRef = useRef<THREE.Scene | null>(null)
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -30,8 +36,9 @@ export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, 
 
         // Combine album covers: current track repeated ~12 times + background albums
         const currentTrackRepeats = 3
+        const currentTrackAlbum = { uri: '', cover: currentAlbumCover }
         const combinedAlbums = [
-            ...Array(currentTrackRepeats).fill(currentAlbumCover),
+            ...Array(currentTrackRepeats).fill(currentTrackAlbum),
             ...backgroundAlbums,
         ]
 
@@ -85,6 +92,7 @@ export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, 
                 albumCovers: combinedAlbums,
                 currentTrackCount: currentTrackRepeats,
                 isPlaying,
+                onAlbumClick,
             })
             planesRef.current = planes
 
@@ -102,6 +110,9 @@ export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, 
                 }
                 return
             }
+
+            // Set the camera for raycasting
+            planes.setCamera(camera)
 
             // Bind drag interactions to canvas
             planes.bindDrag(canvasRef.current!)
@@ -184,7 +195,7 @@ export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, 
                 cleanup()
             }
         }
-    }, [currentAlbumCover, backgroundAlbums, isPlaying])
+    }, [currentAlbumCover, backgroundAlbums, isPlaying, onAlbumClick])
 
     return (
         <canvas

@@ -3,12 +3,18 @@ import { Size, DragState, ScrollState, ImageInfo } from './types'
 import vertexShader from '../shaders/vertex'
 import fragmentShader from '../shaders/fragment'
 
+interface AlbumData {
+    uri: string
+    cover: string
+}
+
 interface PlanesOptions {
     scene: THREE.Scene
     sizes: Size
-    albumCovers: string[]
+    albumCovers: AlbumData[]
     currentTrackCount: number
     isPlaying: boolean
+    onAlbumClick?: (albumUri: string) => void
 }
 
 export default class Planes {
@@ -22,9 +28,12 @@ export default class Planes {
     blurryAtlasTexture: THREE.Texture | null = null
     imageInfos: ImageInfo[] = []
     dragElement: HTMLElement | null = null
-    albumCovers: string[]
+    albumCovers: AlbumData[]
     currentTrackCount: number = 0
     isPlaying: boolean = false
+    onAlbumClick?: (albumUri: string) => void
+    raycaster: THREE.Raycaster = new THREE.Raycaster()
+    camera: THREE.Camera | null = null
 
     drag: DragState = {
         isDown: false,
@@ -53,12 +62,13 @@ export default class Planes {
 
     isReady: boolean = false
 
-    constructor({ scene, sizes, albumCovers, currentTrackCount, isPlaying }: PlanesOptions) {
+    constructor({ scene, sizes, albumCovers, currentTrackCount, isPlaying, onAlbumClick }: PlanesOptions) {
         this.scene = scene
         this.sizes = sizes
         this.albumCovers = albumCovers
         this.currentTrackCount = currentTrackCount
         this.isPlaying = isPlaying
+        this.onAlbumClick = onAlbumClick
 
         // Set dynamic spread parameters based on viewport size (like reference)
         this.shaderParameters = {
@@ -85,9 +95,10 @@ export default class Planes {
         this.geometry.scale(2, 2, 2)  // Reduced from 2 to make covers smaller
     }
 
-    async createAtlas(urls: string[]) {
+    async createAtlas(albums: AlbumData[]) {
         // Load all images with CORS-safe approach to avoid tainted canvas
-        const imagePromises = urls.map(async (path) => {
+        const imagePromises = albums.map(async (albumData) => {
+            const path = albumData.cover
             try {
                 const res = await fetch(path, { mode: 'cors' })
                 if (!res.ok) throw new Error(`Failed to fetch image: ${path}`)
@@ -274,6 +285,43 @@ export default class Planes {
             element.setPointerCapture(e.pointerId)
         }
 
+        const onClick = (e: PointerEvent) => {
+            // Only handle clicks (not drags)
+            const dx = Math.abs(e.clientX - this.drag.startX)
+            const dy = Math.abs(e.clientY - this.drag.startY)
+            if (dx > 5 || dy > 5) return // It's a drag, not a click
+
+            if (!this.camera || !this.onAlbumClick) return
+
+            // Convert mouse position to normalized device coordinates (-1 to +1)
+            const mouse = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1
+            )
+
+            // Update the raycaster
+            this.raycaster.setFromCamera(mouse, this.camera)
+
+            // Check for intersections
+            const intersects = this.raycaster.intersectObject(this.mesh)
+
+            if (intersects.length > 0) {
+                const instanceId = intersects[0].instanceId
+                if (instanceId !== undefined) {
+                    // Get the album index from the instance
+                    const albumIndex = instanceId % this.imageInfos.length
+
+                    // Only trigger click for background albums (not current track)
+                    if (albumIndex >= this.currentTrackCount) {
+                        const album = this.albumCovers[albumIndex]
+                        if (album?.uri) {
+                            this.onAlbumClick(album.uri)
+                        }
+                    }
+                }
+            }
+        }
+
         const onPointerMove = (e: PointerEvent) => {
             if (!this.drag.isDown) return
             const dx = e.clientX - this.drag.lastX
@@ -299,8 +347,13 @@ export default class Planes {
         }
 
         element.addEventListener('pointerdown', onPointerDown)
+        element.addEventListener('click', onClick)
         window.addEventListener('pointermove', onPointerMove)
         window.addEventListener('pointerup', onPointerUp)
+    }
+
+    setCamera(camera: THREE.Camera) {
+        this.camera = camera
     }
 
     onWheel(deltaY: number) {

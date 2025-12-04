@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams
         const artistId = searchParams.get('artistId')
 
-        let covers: string[] = []
+        interface AlbumData {
+            uri: string
+            cover: string
+        }
+
+        let albums: AlbumData[] = []
 
         if (artistId) {
             // Fetch albums from the same artist (discography)
@@ -32,10 +37,13 @@ export async function GET(request: NextRequest) {
 
             if (artistAlbumsResponse.ok) {
                 const artistAlbumsData = await artistAlbumsResponse.json()
-                const artistCovers = artistAlbumsData.items
-                    .map((album: any) => album.images[0]?.url)
-                    .filter(Boolean)
-                covers.push(...artistCovers)
+                const artistAlbums = artistAlbumsData.items
+                    .map((album: any) => ({
+                        uri: album.uri,
+                        cover: album.images[0]?.url
+                    }))
+                    .filter((a: AlbumData) => a.cover)
+                albums.push(...artistAlbums)
             }
 
             // Fetch related artists and their albums
@@ -66,10 +74,13 @@ export async function GET(request: NextRequest) {
 
                     if (albumsResponse.ok) {
                         const albumsData = await albumsResponse.json()
-                        const relatedCovers = albumsData.items
-                            .map((album: any) => album.images[0]?.url)
-                            .filter(Boolean)
-                        covers.push(...relatedCovers)
+                        const relatedAlbums = albumsData.items
+                            .map((album: any) => ({
+                                uri: album.uri,
+                                cover: album.images[0]?.url
+                            }))
+                            .filter((a: AlbumData) => a.cover)
+                        albums.push(...relatedAlbums)
                     }
                 }
             }
@@ -93,10 +104,15 @@ export async function GET(request: NextRequest) {
             }
 
             const data = await response.json()
-            covers = data.albums.items.map((album: any) => album.images[0]?.url).filter(Boolean)
+            albums = data.albums.items
+                .map((album: any) => ({
+                    uri: album.uri,
+                    cover: album.images[0]?.url
+                }))
+                .filter((a: AlbumData) => a.cover)
         }
 
-        return NextResponse.json({ covers })
+        return NextResponse.json({ albums })
     } catch (error) {
         console.error('Error fetching new releases:', error)
         return NextResponse.json(

@@ -22,7 +22,7 @@ export default function VisualizerPage() {
     const { data: session } = useSession()
     const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
-    const [backgroundAlbums, setBackgroundAlbums] = useState<string[]>([])
+    const [backgroundAlbums, setBackgroundAlbums] = useState<Array<{ uri: string; cover: string }>>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
@@ -71,7 +71,7 @@ export default function VisualizerPage() {
             }
 
             const data = await response.json()
-            setBackgroundAlbums(data.covers || [])
+            setBackgroundAlbums(data.albums || [])
         } catch (err) {
             console.error('Error fetching background albums:', err)
         }
@@ -167,6 +167,40 @@ export default function VisualizerPage() {
     const handlePrevious = () => {
         handlePlaybackControl('previous')
     }
+
+    // Handle album click - play the selected album
+    const handleAlbumClick = useCallback(async (albumUri: string) => {
+        if (!albumUri) return
+
+        try {
+            const response = await fetch('/api/spotify/playback-control', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'play',
+                    contextUri: albumUri
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                console.error('Album playback error:', data)
+                alert(data.details || data.error || 'Failed to play album')
+                return
+            }
+
+            // Immediately fetch updated state
+            setTimeout(() => {
+                fetchCurrentlyPlaying()
+            }, 300)
+        } catch (err) {
+            console.error('Error playing album:', err)
+            alert('Error playing album. Please try again.')
+        }
+    }, [fetchCurrentlyPlaying])
 
     // Fullscreen handlers
     useEffect(() => {
@@ -295,6 +329,7 @@ export default function VisualizerPage() {
                 currentAlbumCover={currentTrack.albumCover}
                 backgroundAlbums={backgroundAlbums}
                 isPlaying={isPlaying}
+                onAlbumClick={handleAlbumClick}
             />
 
             {/* Playback Controls */}
