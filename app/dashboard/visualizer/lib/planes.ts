@@ -12,7 +12,7 @@ interface PlanesOptions {
 export default class Planes {
     scene: THREE.Scene
     sizes: Size
-    meshCount: number = 100
+    meshCount: number = 400  // Increased from 100 to match reference
     geometry!: THREE.PlaneGeometry
     material!: THREE.ShaderMaterial
     mesh!: THREE.InstancedMesh
@@ -67,7 +67,9 @@ export default class Planes {
     }
 
     createGeometry() {
-        this.geometry = new THREE.PlaneGeometry(1.5, 1.5, 32, 32)
+        // Match reference project: 1 x 1.69 (album aspect ratio) with scale of 2
+        this.geometry = new THREE.PlaneGeometry(1, 1.69, 1, 1)
+        this.geometry.scale(2, 2, 2)
     }
 
     async createAtlas(urls: string[]) {
