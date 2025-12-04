@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Music, Home, PlusCircle, Library, LogOut, PanelLeft } from "lucide-react"
+import { Music, Home, PlusCircle, Library, LogOut, PanelLeft, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -22,6 +22,7 @@ export default function DashboardLayout({
         { name: "Home", href: "/dashboard", icon: Home },
         { name: "Create Playlist", href: "/dashboard/create", icon: PlusCircle },
         { name: "My Library", href: "/dashboard/library", icon: Library },
+        { name: "Visualizer", href: "/dashboard/visualizer", icon: Sparkles },
     ]
 
     return (
