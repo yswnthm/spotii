@@ -7,6 +7,8 @@ interface PlanesOptions {
     scene: THREE.Scene
     sizes: Size
     albumCovers: string[]
+    currentTrackCount: number
+    isPlaying: boolean
 }
 
 export default class Planes {
@@ -21,6 +23,8 @@ export default class Planes {
     imageInfos: ImageInfo[] = []
     dragElement: HTMLElement | null = null
     albumCovers: string[]
+    currentTrackCount: number = 0
+    isPlaying: boolean = false
 
     drag: DragState = {
         isDown: false,
@@ -49,10 +53,12 @@ export default class Planes {
 
     isReady: boolean = false
 
-    constructor({ scene, sizes, albumCovers }: PlanesOptions) {
+    constructor({ scene, sizes, albumCovers, currentTrackCount, isPlaying }: PlanesOptions) {
         this.scene = scene
         this.sizes = sizes
         this.albumCovers = albumCovers
+        this.currentTrackCount = currentTrackCount
+        this.isPlaying = isPlaying
 
         // Set dynamic spread parameters based on viewport size (like reference)
         this.shaderParameters = {
@@ -215,6 +221,7 @@ export default class Planes {
         const initialPosition = new Float32Array(this.meshCount * 3)
         const meshSpeed = new Float32Array(this.meshCount)
         const aTextureCoords = new Float32Array(this.meshCount * 4)
+        const aOpacity = new Float32Array(this.meshCount)
 
         for (let i = 0; i < this.meshCount; i++) {
             initialPosition[i * 3 + 0] =
@@ -231,6 +238,9 @@ export default class Planes {
             aTextureCoords[i * 4 + 1] = this.imageInfos[imageIndex].uvs.xEnd
             aTextureCoords[i * 4 + 2] = this.imageInfos[imageIndex].uvs.yStart
             aTextureCoords[i * 4 + 3] = this.imageInfos[imageIndex].uvs.yEnd
+
+            // Set opacity: 1.0 for current track instances, 0.4 for background albums
+            aOpacity[i] = imageIndex < this.currentTrackCount ? 1.0 : 0.4
         }
 
         this.geometry.setAttribute(
@@ -245,6 +255,10 @@ export default class Planes {
         this.mesh.geometry.setAttribute(
             'aTextureCoords',
             new THREE.InstancedBufferAttribute(aTextureCoords, 4)
+        )
+        this.mesh.geometry.setAttribute(
+            'aOpacity',
+            new THREE.InstancedBufferAttribute(aOpacity, 1)
         )
     }
 

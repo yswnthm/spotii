@@ -6,10 +6,13 @@ import Planes from '../lib/planes'
 import { Size, Dimensions } from '../lib/types'
 
 interface VisualizerCanvasProps {
-    albumCovers: string[]
+    currentAlbumCover: string
+    backgroundAlbums: string[]
+    isPlaying: boolean
 }
 
-export default function VisualizerCanvas({ albumCovers }: VisualizerCanvasProps) {
+
+export default function VisualizerCanvas({ currentAlbumCover, backgroundAlbums, isPlaying }: VisualizerCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const sceneRef = useRef<THREE.Scene | null>(null)
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -21,9 +24,16 @@ export default function VisualizerCanvas({ albumCovers }: VisualizerCanvasProps)
     const animationIdRef = useRef<number | null>(null)
 
     useEffect(() => {
-        if (!canvasRef.current || albumCovers.length === 0) return
+        if (!canvasRef.current || !currentAlbumCover) return
 
         let isCleanedUp = false
+
+        // Combine album covers: current track repeated ~12 times + background albums
+        const currentTrackRepeats = 12
+        const combinedAlbums = [
+            ...Array(currentTrackRepeats).fill(currentAlbumCover),
+            ...backgroundAlbums,
+        ]
 
         // Async initialization
         const initVisualization = async () => {
@@ -72,7 +82,9 @@ export default function VisualizerCanvas({ albumCovers }: VisualizerCanvasProps)
             const planes = new Planes({
                 scene,
                 sizes: sizesRef.current,
-                albumCovers,
+                albumCovers: combinedAlbums,
+                currentTrackCount: currentTrackRepeats,
+                isPlaying,
             })
             planesRef.current = planes
 
@@ -172,7 +184,7 @@ export default function VisualizerCanvas({ albumCovers }: VisualizerCanvasProps)
                 cleanup()
             }
         }
-    }, [albumCovers])
+    }, [currentAlbumCover, backgroundAlbums, isPlaying])
 
     return (
         <canvas

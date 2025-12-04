@@ -4,6 +4,7 @@ varying vec2 vUv;
 attribute vec3 aInitialPosition;
 attribute float aMeshSpeed;
 attribute vec4 aTextureCoords;
+attribute float aOpacity;
 
 
 uniform float uTime;
@@ -16,6 +17,7 @@ uniform float uScrollY;
 
 varying float vVisibility;
 varying vec4 vTextureCoords;
+varying float vOpacity;
 
 
 //linear smoothstep
@@ -71,6 +73,7 @@ void main()
 
     vUv = uv;
     vTextureCoords = aTextureCoords;
+    vOpacity = aOpacity;
 }
 `
 

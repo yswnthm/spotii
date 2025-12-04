@@ -8,7 +8,7 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.SPOTIFY_CLIENT_SECRET ?? "",
             authorization: {
                 params: {
-                    scope: "user-read-email playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative",
+                    scope: "user-read-email playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative user-read-currently-playing user-read-playback-state user-modify-playback-state",
                 },
             },
         }),

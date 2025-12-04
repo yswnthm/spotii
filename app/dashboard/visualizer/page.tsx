@@ -3,44 +3,150 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import VisualizerCanvas from './components/VisualizerCanvas'
+import PlaybackControls from './components/PlaybackControls'
 import { Button } from '@/components/ui/button'
 import { Music, Loader2, Maximize2, Minimize2 } from 'lucide-react'
 import Link from 'next/link'
 
+interface Track {
+    id: string
+    name: string
+    artists: string[]
+    albumCover: string
+    duration: number
+    progressMs: number
+}
+
 export default function VisualizerPage() {
     const { data: session } = useSession()
-    const [albumCovers, setAlbumCovers] = useState<string[]>([])
+    const [currentTrack, setCurrentTrack] = useState<Track | null>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
+    const [backgroundAlbums, setBackgroundAlbums] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
+    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
+    // Fetch currently playing track
+    const fetchCurrentlyPlaying = async () => {
+        if (!session?.accessToken) return
+
+        try {
+            const response = await fetch('/api/spotify/currently-playing')
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch currently playing track')
+            }
+
+            const data = await response.json()
+
+            if (data.track) {
+                setCurrentTrack(data.track)
+                setIsPlaying(data.isPlaying)
+            } else {
+                setCurrentTrack(null)
+                setIsPlaying(false)
+            }
+        } catch (err) {
+            console.error('Error fetching currently playing:', err)
+            // Don't set error state for polling failures to avoid disrupting the experience
+        }
+    }
+
+    // Fetch background albums (new releases)
+    const fetchBackgroundAlbums = async () => {
+        if (!session?.accessToken) return
+
+        try {
+            const response = await fetch('/api/spotify/new-releases')
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch background albums')
+            }
+
+            const data = await response.json()
+            setBackgroundAlbums(data.covers || [])
+        } catch (err) {
+            console.error('Error fetching background albums:', err)
+        }
+    }
+
+    // Initial fetch
     useEffect(() => {
-        async function fetchAlbumCovers() {
+        async function initialize() {
             if (!session?.accessToken) {
                 setLoading(false)
                 return
             }
 
             try {
-                const response = await fetch('/api/spotify/new-releases')
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch album covers')
-                }
-
-                const data = await response.json()
-                setAlbumCovers(data.covers || [])
+                await Promise.all([
+                    fetchCurrentlyPlaying(),
+                    fetchBackgroundAlbums(),
+                ])
             } catch (err) {
-                console.error('Error fetching album covers:', err)
-                setError('Failed to load album covers')
+                console.error('Error initializing:', err)
+                setError('Failed to load visualizer')
             } finally {
                 setLoading(false)
             }
         }
 
-        fetchAlbumCovers()
+        initialize()
     }, [session])
+
+    // Polling for currently playing track
+    useEffect(() => {
+        if (!session?.accessToken) return
+
+        // Poll every 1 second for real-time updates
+        pollingIntervalRef.current = setInterval(() => {
+            fetchCurrentlyPlaying()
+        }, 1000)
+
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current)
+            }
+        }
+    }, [session])
+
+    // Playback control handlers
+    const handlePlaybackControl = async (action: 'play' | 'pause' | 'next' | 'previous') => {
+        try {
+            const response = await fetch('/api/spotify/playback-control', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action }),
+            })
+
+            if (!response.ok) {
+                throw new Error(`Failed to ${action}`)
+            }
+
+            // Immediately fetch updated state
+            setTimeout(() => {
+                fetchCurrentlyPlaying()
+            }, 300)
+        } catch (err) {
+            console.error(`Error ${action}ing playback:`, err)
+        }
+    }
+
+    const handlePlayPause = () => {
+        handlePlaybackControl(isPlaying ? 'pause' : 'play')
+    }
+
+    const handleNext = () => {
+        handlePlaybackControl('next')
+    }
+
+    const handlePrevious = () => {
+        handlePlaybackControl('previous')
+    }
 
     // Fullscreen handlers
     useEffect(() => {
@@ -91,7 +197,7 @@ export default function VisualizerPage() {
                         Connect Spotify
                     </h2>
                     <p className="text-muted-foreground mb-6">
-                        Connect your Spotify account to experience the 3D album visualizer with the latest new releases.
+                        Connect your Spotify account to experience the 3D playback visualizer synced with your music.
                     </p>
                     <Link href="/api/auth/signin/spotify">
                         <Button className="w-full" size="lg">
@@ -117,7 +223,7 @@ export default function VisualizerPage() {
             <div className="h-screen w-full flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading album covers...</p>
+                    <p className="text-muted-foreground">Loading visualizer...</p>
                 </div>
             </div>
         )
@@ -143,8 +249,8 @@ export default function VisualizerPage() {
         )
     }
 
-    // No album covers
-    if (albumCovers.length === 0) {
+    // No song playing
+    if (!currentTrack) {
         return (
             <div className="h-screen w-full flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-center">
@@ -152,20 +258,33 @@ export default function VisualizerPage() {
                         <Music className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">
-                        No Albums Found
+                        No Song Playing
                     </h2>
                     <p className="text-muted-foreground">
-                        Unable to load new releases at this time.
+                        Start playing a song on Spotify to see the 3D visualizer come to life.
                     </p>
                 </div>
             </div>
         )
     }
 
-    // Render visualizer
+    // Render visualizer with playback
     return (
         <div ref={containerRef} className="relative h-screen w-full overflow-hidden bg-black">
-            <VisualizerCanvas albumCovers={albumCovers} />
+            <VisualizerCanvas
+                currentAlbumCover={currentTrack.albumCover}
+                backgroundAlbums={backgroundAlbums}
+                isPlaying={isPlaying}
+            />
+
+            {/* Playback Controls */}
+            <PlaybackControls
+                track={currentTrack}
+                isPlaying={isPlaying}
+                onPlayPause={handlePlayPause}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+            />
 
             {/* Fullscreen toggle button */}
             <div className="absolute top-4 right-4 z-10">
@@ -185,7 +304,7 @@ export default function VisualizerPage() {
             </div>
 
             {/* Instructions overlay */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3">
                     <p className="text-sm text-white/80 text-center">
                         <span className="font-medium">Drag</span> to move • <span className="font-medium">Scroll</span> to zoom • <span className="font-medium">F</span> for fullscreen

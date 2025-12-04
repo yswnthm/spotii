@@ -2,6 +2,7 @@ const fragmentShader = `
 varying vec2 vUv;
 varying float vVisibility;
 varying vec4 vTextureCoords;
+varying float vOpacity;
 
 uniform sampler2D uWrapperTexture;
 uniform sampler2D uAtlas;
@@ -37,6 +38,7 @@ void main()
     vec4 color = texel.b<0.02 ? texture2D(uAtlas, atlasUV) : texel + blurryTexel*0.8;
 
     color.a *= vVisibility;
+    color.a *= vOpacity;  // Apply per-instance opacity
 
     color.r = min(color.r, 1.);
     color.g = min(color.g, 1.);
