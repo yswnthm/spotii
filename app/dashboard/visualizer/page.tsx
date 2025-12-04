@@ -12,6 +12,7 @@ interface Track {
     id: string
     name: string
     artists: string[]
+    albumId: string
     albumCover: string
     duration: number
     progressMs: number
@@ -54,21 +55,21 @@ export default function VisualizerPage() {
         }
     }, [session?.accessToken])
 
-    // Fetch background albums (new releases)
-    const fetchBackgroundAlbums = useCallback(async () => {
+    // Fetch similar songs based on current track
+    const fetchSimilarSongs = useCallback(async (trackId: string, albumId: string) => {
         if (!session?.accessToken) return
 
         try {
-            const response = await fetch('/api/spotify/new-releases')
+            const response = await fetch(`/api/spotify/recommendations?trackId=${trackId}&albumId=${albumId}`)
 
             if (!response.ok) {
-                throw new Error('Failed to fetch background albums')
+                throw new Error('Failed to fetch similar songs')
             }
 
             const data = await response.json()
             setBackgroundAlbums(data.covers || [])
         } catch (err) {
-            console.error('Error fetching background albums:', err)
+            console.error('Error fetching similar songs:', err)
         }
     }, [session?.accessToken])
 
@@ -81,10 +82,7 @@ export default function VisualizerPage() {
             }
 
             try {
-                await Promise.all([
-                    fetchCurrentlyPlaying(),
-                    fetchBackgroundAlbums(),
-                ])
+                await fetchCurrentlyPlaying()
             } catch (err) {
                 console.error('Error initializing:', err)
                 setError('Failed to load visualizer')
@@ -94,7 +92,7 @@ export default function VisualizerPage() {
         }
 
         initialize()
-    }, [session, fetchCurrentlyPlaying, fetchBackgroundAlbums])
+    }, [session, fetchCurrentlyPlaying])
 
 
     // Polling for currently playing track
@@ -112,6 +110,14 @@ export default function VisualizerPage() {
             }
         }
     }, [session?.accessToken, fetchCurrentlyPlaying])
+
+
+    // Fetch similar songs when current track changes
+    useEffect(() => {
+        if (currentTrack?.id && currentTrack?.albumId) {
+            fetchSimilarSongs(currentTrack.id, currentTrack.albumId)
+        }
+    }, [currentTrack?.id, currentTrack?.albumId, fetchSimilarSongs])
 
 
     // Playback control handlers
