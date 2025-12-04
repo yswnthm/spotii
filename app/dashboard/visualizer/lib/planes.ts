@@ -40,8 +40,8 @@ export default class Planes {
     }
 
     shaderParameters = {
-        maxX: 7,
-        maxY: 4,
+        maxX: 0,
+        maxY: 0,
     }
 
     dragSensitivity = 0.5
@@ -53,6 +53,13 @@ export default class Planes {
         this.scene = scene
         this.sizes = sizes
         this.albumCovers = albumCovers
+
+        // Set dynamic spread parameters based on viewport size (like reference)
+        this.shaderParameters = {
+            maxX: this.sizes.width * 2,
+            maxY: this.sizes.height * 2,
+        }
+
         // Don't call init() here - let the caller await it
     }
 
@@ -69,7 +76,7 @@ export default class Planes {
     createGeometry() {
         // 1 x 1.69 (album aspect ratio) - reduced scale for better visibility
         this.geometry = new THREE.PlaneGeometry(1, 1.69, 1, 1)
-        this.geometry.scale(1, 1, 1)  // Reduced from 2 to make covers smaller
+        this.geometry.scale(2, 2, 2)  // Reduced from 2 to make covers smaller
     }
 
     async createAtlas(urls: string[]) {
