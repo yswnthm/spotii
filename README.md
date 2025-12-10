@@ -4,7 +4,7 @@
 
 Spotii is a modern web application that uses AI to create personalized music playlists tailored to your mood, vibe, and preferences. Simply describe what you're feeling, and let AI curate the perfect soundtrack for any moment.
 
-![Spotii](public/back2.jpg)
+![Spotii](public/back2.webp)
 
 ---
 
