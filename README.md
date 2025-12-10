@@ -250,7 +250,7 @@ spotii/
 ├── lib/                         # Utility libraries
 │   └── utils.ts                 # Helper functions
 ├── public/                      # Static assets
-│   ├── back2.jpg                # Background image
+│   ├── back2.webp               # Background image
 │   └── ...                      # Icons and other assets
 ├── types/                       # TypeScript type definitions
 ├── .env.local                   # Environment variables (create this)
